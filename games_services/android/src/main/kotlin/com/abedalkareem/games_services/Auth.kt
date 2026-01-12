@@ -10,8 +10,8 @@ import com.abedalkareem.games_services.util.PluginError
 import com.abedalkareem.games_services.util.errorCode
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.common.api.Scope
 import com.google.android.gms.games.AuthenticationResult
+import com.google.android.gms.games.gamessignin.AuthScope
 import com.google.android.gms.games.GamesSignInClient
 import com.google.android.gms.games.PlayGames
 import com.google.android.gms.games.PlayersClient
@@ -20,6 +20,7 @@ import com.google.gson.Gson
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import java.util.Locale
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -106,14 +107,7 @@ class Auth(private var activityPluginBinding: ActivityPluginBinding) :
     additionalScopes: List<String>,
     result: MethodChannel.Result
   ) {
-    val scopes = additionalScopes.mapNotNull { scope ->
-      val trimmed = scope.trim()
-      if (trimmed.isEmpty()) {
-        null
-      } else {
-        Scope(trimmed)
-      }
-    }
+    val scopes = mapAdditionalScopes(additionalScopes)
     val accessTask = if (scopes.isEmpty()) {
       gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken)
     } else {
@@ -198,4 +192,19 @@ class Auth(private var activityPluginBinding: ActivityPluginBinding) :
   }
   //endregion
   //endregion
+
+  private fun mapAdditionalScopes(raw: List<String>?): List<AuthScope> {
+    if (raw.isNullOrEmpty()) {
+      return emptyList()
+    }
+    val mapped = mutableListOf<AuthScope>()
+    raw.forEach { value ->
+      when (value.trim().uppercase(Locale.US)) {
+        "EMAIL" -> mapped.add(AuthScope.EMAIL)
+        "PROFILE" -> mapped.add(AuthScope.PROFILE)
+        "OPEN_ID", "OPENID" -> mapped.add(AuthScope.OPEN_ID)
+      }
+    }
+    return mapped
+  }
 }
