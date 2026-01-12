@@ -30,10 +30,17 @@ abstract class GameAuth {
 
   /// Retrieve a Google Play Games `server_auth_code` to be used by a backend,
   /// such as Firebase, to authenticate the user. `null` on other platforms.
-  static Future<String?> getAuthCode(String clientID,
-          {bool forceRefreshToken = false}) =>
-      GamesServicesPlatform.instance
-          .getAuthCode(clientID, forceRefreshToken: forceRefreshToken);
+  /// Use [additionalScopes] (Android only) to request extra OAuth scopes.
+  static Future<String?> getAuthCode(
+    String clientID, {
+    bool forceRefreshToken = false,
+    List<String> additionalScopes = const [],
+  }) =>
+      GamesServicesPlatform.instance.getAuthCode(
+        clientID,
+        forceRefreshToken: forceRefreshToken,
+        additionalScopes: additionalScopes,
+      );
 
   /// Fetch identity verification signature from Game Center (iOS and MacOS).
   /// Returns identity verification data including:

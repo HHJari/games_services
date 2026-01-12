@@ -41,8 +41,17 @@ class GamesServices {
 
   /// Retrieve a Google Play Games `server_auth_code` to be used by a backend,
   /// such as Firebase, to authenticate the user. `null` on other platforms.
-  static Future<String?> getAuthCode(String clientID) async =>
-      await GameAuth.getAuthCode(clientID);
+  /// Use [additionalScopes] (Android only) to request extra OAuth scopes.
+  static Future<String?> getAuthCode(
+    String clientID, {
+    bool forceRefreshToken = false,
+    List<String> additionalScopes = const [],
+  }) async =>
+      await GameAuth.getAuthCode(
+        clientID,
+        forceRefreshToken: forceRefreshToken,
+        additionalScopes: additionalScopes,
+      );
 
   /// Open the device's default achievements screen.
   static Future<String?> showAchievements() async {

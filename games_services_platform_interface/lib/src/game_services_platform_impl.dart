@@ -186,11 +186,13 @@ class MethodChannelGamesServices extends GamesServicesPlatform {
   Future<String?> getAuthCode(
     String clientID, {
     bool forceRefreshToken = false,
+    List<String> additionalScopes = const [],
   }) =>
       Device.isPlatformAndroid
           ? _methodChannel.invokeMethod("getAuthCode", {
               "clientID": clientID,
               "forceRefreshToken": forceRefreshToken,
+              "additionalScopes": additionalScopes,
             })
           : Future.value(null);
 

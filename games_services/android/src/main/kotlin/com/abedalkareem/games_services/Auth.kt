@@ -10,6 +10,7 @@ import com.abedalkareem.games_services.util.PluginError
 import com.abedalkareem.games_services.util.errorCode
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.api.Scope
 import com.google.android.gms.games.AuthenticationResult
 import com.google.android.gms.games.GamesSignInClient
 import com.google.android.gms.games.PlayGames
@@ -99,8 +100,26 @@ class Auth(private var activityPluginBinding: ActivityPluginBinding) :
     }
   }
 
-  fun getAuthCode(clientID: String, forceRefreshToken: Boolean, result: MethodChannel.Result) {
-    gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken).addOnSuccessListener {
+  fun getAuthCode(
+    clientID: String,
+    forceRefreshToken: Boolean,
+    additionalScopes: List<String>,
+    result: MethodChannel.Result
+  ) {
+    val scopes = additionalScopes.mapNotNull { scope ->
+      val trimmed = scope.trim()
+      if (trimmed.isEmpty()) {
+        null
+      } else {
+        Scope(trimmed)
+      }
+    }
+    val accessTask = if (scopes.isEmpty()) {
+      gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken)
+    } else {
+      gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken, scopes)
+    }
+    accessTask.addOnSuccessListener {
       result.success(it)
     }.addOnFailureListener {
       result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)

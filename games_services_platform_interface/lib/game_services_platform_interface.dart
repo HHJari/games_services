@@ -139,9 +139,12 @@ abstract class GamesServicesPlatform extends PlatformInterface {
 
   /// Retrieve Google Play Games [server_auth_code] to be used by an auth provider,
   /// such as Firebase, to authenticate the user. [null] on other platforms.
+  /// [additionalScopes] (Android only) requests extra OAuth scopes to be included
+  /// when exchanging the auth code.
   Future<String?> getAuthCode(
     String clientID, {
     bool forceRefreshToken = false,
+    List<String> additionalScopes = const [],
   }) =>
       throw UnimplementedError("not implemented.");
 

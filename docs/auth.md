@@ -35,8 +35,15 @@ final isSignedIn = await GameAuth.isSignedIn;
 Retrieve a Google Play Games `server_auth_code` to be used by a backend, such as Firebase, to authenticate the user. `null` on other platforms.
 
 ```dart
-final authCode = await GameAuth.getAuthCode(String clientID);
+final authCode = await GameAuth.getAuthCode(
+  clientID,
+  forceRefreshToken: true,
+  additionalScopes: ['openid'],
+);
 ```
+
+`forceRefreshToken` controls whether a new refresh token is issued, and `additionalScopes` (Android only)
+lets you request extra OAuth scopes to be included in the authorization code exchange.
 
 ## Fetch Identity Verification Signature (iOS and macOS)
 
