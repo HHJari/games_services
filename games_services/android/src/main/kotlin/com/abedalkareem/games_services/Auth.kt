@@ -108,15 +108,19 @@ class Auth(private var activityPluginBinding: ActivityPluginBinding) :
     result: MethodChannel.Result
   ) {
     val scopes = mapAdditionalScopes(additionalScopes)
-    val accessTask = if (scopes.isEmpty()) {
-      gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken)
+    if (scopes.isEmpty()) {
+      gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken).addOnSuccessListener {
+        result.success(it)
+      }.addOnFailureListener {
+        result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)
+      }
     } else {
       gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken, scopes)
-    }
-    accessTask.addOnSuccessListener {
-      result.success(it)
-    }.addOnFailureListener {
-      result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)
+        .addOnSuccessListener { response ->
+          result.success(response.authCode)
+        }.addOnFailureListener {
+          result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)
+        }
     }
   }
 
