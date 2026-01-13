@@ -108,7 +108,7 @@ class GamesServicesPlugin : FlutterPlugin,
       Method.GetAuthCode -> {
         val clientID = call.argument<String>("clientID") ?: ""
         val forceRefreshToken = call.argument<Boolean>("forceRefreshToken") ?: false
-        val additionalScopes = call.argument<List<String>>("additionalScopes") ?: emptyList()
+        val additionalScopes = call.argument<List<String>>("additionalScopes")
         auth?.getAuthCode(clientID, forceRefreshToken, additionalScopes, result)
       }
 

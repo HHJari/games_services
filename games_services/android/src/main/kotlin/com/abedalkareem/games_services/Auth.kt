@@ -11,6 +11,7 @@ import com.abedalkareem.games_services.util.errorCode
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.games.AuthenticationResult
+import com.google.android.gms.games.gamessignin.AuthResponse
 import com.google.android.gms.games.gamessignin.AuthScope
 import com.google.android.gms.games.GamesSignInClient
 import com.google.android.gms.games.PlayGames
@@ -104,23 +105,38 @@ class Auth(private var activityPluginBinding: ActivityPluginBinding) :
   fun getAuthCode(
     clientID: String,
     forceRefreshToken: Boolean,
-    additionalScopes: List<String>,
+    additionalScopes: List<String>?,
     result: MethodChannel.Result
   ) {
     val scopes = mapAdditionalScopes(additionalScopes)
-    if (scopes.isEmpty()) {
-      gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken).addOnSuccessListener {
-        result.success(it)
-      }.addOnFailureListener {
-        result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)
-      }
+    val task: Task<*> = if (scopes.isEmpty()) {
+      gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken)
     } else {
       gamesSignInClient.requestServerSideAccess(clientID, forceRefreshToken, scopes)
-        .addOnSuccessListener { response ->
-          result.success(response.authCode)
-        }.addOnFailureListener {
-          result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)
+    }
+    task.addOnSuccessListener { response ->
+      when (response) {
+        is String -> result.success(response)
+        is AuthResponse -> {
+          val authCode = response.authCode
+          if (authCode.isNullOrEmpty()) {
+            result.error(
+              PluginError.FailedToGetAuthCode.errorCode(),
+              "Empty authCode returned",
+              null
+            )
+          } else {
+            result.success(authCode)
+          }
         }
+        else -> result.error(
+          PluginError.FailedToGetAuthCode.errorCode(),
+          "Unsupported auth response type: ${response?.javaClass?.name}",
+          null
+        )
+      }
+    }.addOnFailureListener {
+      result.error(PluginError.FailedToGetAuthCode.errorCode(), it.message ?: "", null)
     }
   }
 
@@ -201,6 +217,7 @@ class Auth(private var activityPluginBinding: ActivityPluginBinding) :
     if (raw.isNullOrEmpty()) {
       return emptyList()
     }
+    
     val mapped = mutableListOf<AuthScope>()
     raw.forEach { value ->
       when (value.trim().uppercase(Locale.US)) {
